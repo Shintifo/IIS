@@ -48,9 +48,8 @@ def qimg_embedding(qimg_path):
 	q = transform_image(qimg_path)
 
 	session = onnxruntime.InferenceSession(f"WrapperONNX.onnx")
-	q = np.asarray(
-		session.run(None, {"l_tensor_": q})
-	).flatten()
+
+	q = session.run(None, {"l_tensor_": q})[0]
 	q = torch.tensor(np.vstack(q))
 	q = F.normalize(q, p=2, dim=1)
 	return q
@@ -75,8 +74,7 @@ def fais(X, query_embedding):
 
 	print(f"Indices of nearest neighbors: {indices}")
 
-	for i in range(indices.size):  # TODO change to numpy
-		print(distances[i])
+	print(distances[indices])
 	return indices
 
 
@@ -84,9 +82,7 @@ def main(dataset_name, qimg):
 	images_dir = f"{os.getcwd()}/datasets/{dataset_name}"
 	qimg_path = os.path.join(images_dir, qimg)
 
-	s = time.time()
 	X = extract_features(images_dir)
-	print(time.time() - s)
 
 	Q = qimg_embedding(qimg_path)
 	res = fais(X, Q)
