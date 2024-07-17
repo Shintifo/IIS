@@ -1,4 +1,3 @@
-import argparse
 import os
 
 import numpy as np
@@ -6,7 +5,6 @@ import onnxruntime
 from PIL import Image
 import torch
 import torch.nn.functional as F
-
 import torchvision.transforms as transforms
 import faiss
 from tqdm import tqdm
@@ -15,7 +13,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 SIMILARITY_THRESHOLD = 0.6
 TOP_K = 100
-IN_SIZE = 800
+IN_SIZE = 500
 MODEL = "WrapperONNX.onnx"
 
 
