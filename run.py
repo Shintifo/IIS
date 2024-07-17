@@ -13,15 +13,17 @@ from tqdm import tqdm
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
-SIMILARITY_THRESHOLD = 0.7
+SIMILARITY_THRESHOLD = 0.6
 TOP_K = 100
+IN_SIZE = 800
+MODEL = "WrapperONNX.onnx"
 
 
 def transform_image(image_path):
 	image = Image.open(image_path).convert('RGB')
 
 	transformer = transforms.Compose([
-		transforms.Resize((500, 500)),
+		transforms.Resize((IN_SIZE, IN_SIZE)),
 		transforms.ToTensor(),
 		transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 	])
@@ -35,10 +37,11 @@ def extract_features(images_dir):
 
 	imgs = [transform_image(img_path) for img_path in i_paths]
 
-	session = onnxruntime.InferenceSession(f"WrapperONNX.onnx")
+	session = onnxruntime.InferenceSession(MODEL)
+	input_name = session.get_inputs()[0].name
 	out = []
 	for img in tqdm(imgs):
-		out.append(session.run(None, {"l_tensor_": img})[0])
+		out.append(session.run(None, {input_name: img})[0])
 
 	img_feats = torch.tensor(np.vstack(out))
 	X = F.normalize(img_feats, p=2, dim=1)
@@ -48,9 +51,10 @@ def extract_features(images_dir):
 def qimg_embedding(qimg_path):
 	q = transform_image(qimg_path)
 
-	session = onnxruntime.InferenceSession(f"WrapperONNX.onnx")
+	session = onnxruntime.InferenceSession(MODEL)
+	input_name = session.get_inputs()[0].name
 
-	q = session.run(None, {"l_tensor_": q})[0]
+	q = session.run(None, {input_name: q})[0]
 	q = torch.tensor(np.vstack(q))
 	q = F.normalize(q, p=2, dim=1)
 	return q
@@ -62,8 +66,8 @@ def save_index(X, dataset_name):
 	faiss.write_index(index, f'databases/{dataset_name}.index')
 
 
-def find_similar(dataset_name, query_vector):
-	if not os.path.exists(os.path.join('databases', f"{dataset_name}.index")):
+def find_similar(dataset_name, query_vector, recalc):
+	if not os.path.exists(os.path.join('databases', f"{dataset_name}.index")) or recalc:
 		images_dir = f"{os.getcwd()}/datasets/{dataset_name}"
 		X = extract_features(images_dir)
 		save_index(X, dataset_name)
@@ -84,12 +88,12 @@ def find_similar(dataset_name, query_vector):
 	return indices
 
 
-def main(dataset_name, qimg):
+def main(dataset_name, qimg, recalc=False):
 	qimg_path = os.path.join("datasets", dataset_name, qimg)
 	q_vector = qimg_embedding(qimg_path)
-	res = find_similar(dataset_name, q_vector)
+	res = find_similar(dataset_name, q_vector, recalc)
 	return res
 
 
 if __name__ == "__main__":
-	main('roxford5k', "all_souls_000072.jpg")
+	main('custom', "all_souls_000072.jpg", True)
