@@ -1,3 +1,5 @@
+#use this to append iamges folder to db
+import os
 import sqlite3
 import numpy as np
 import cv2  # OpenCV for image handling
@@ -40,6 +42,7 @@ def insert_image_embedding(image_path, embedding):
     conn.close()
 
 
-
-
-insert_image_embedding('TMF.jpg', [0.1, 0.2, 0.3, 1,1,2,312,312,312,3,123,123,123,124,124,12])
+images_dir = r'D:\models\tmf\IIS\datasets\custom'
+for img in os.listdir(images_dir):
+    img_path = os.path.join(images_dir, img)
+    insert_image_embedding(img_path, [12,12,312,1,1312,132,123,321,123])
