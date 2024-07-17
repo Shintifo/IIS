@@ -1,30 +1,31 @@
 # use this to append images folder to db
 import os
+import argparse
 import sqlite3
 import numpy as np
 
-DATASET = "custom"
-NAME = f"{DATASET}.db"
-base_dir = r'datasets'
-
-conn = sqlite3.connect(NAME)
-c = conn.cursor()
-
-c.execute('''
-    CREATE TABLE IF NOT EXISTS images (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        image BLOB,
-        embedding BLOB
-    )
-''')
-
-conn.commit()
-conn.close()
+BASE_DIR = r'datasets'
 
 
-def insert_image_embedding(image_path, embedding):
-	conn = sqlite3.connect(NAME)
+def create_DB(db_name):
+	conn = sqlite3.connect(db_name)
 	c = conn.cursor()
+
+	c.execute('''
+	    CREATE TABLE IF NOT EXISTS images (
+	        id INTEGER PRIMARY KEY AUTOINCREMENT,
+	        image BLOB,
+	        embedding BLOB
+	    )
+	''')
+
+	conn.commit()
+	conn.close()
+
+
+def insert_image_embedding(image_path, embedding, db_name):
+	conn = sqlite3.connect(db_name)
+	connection = conn.cursor()
 
 	# Read image
 	with open(image_path, 'rb') as f:
@@ -34,7 +35,7 @@ def insert_image_embedding(image_path, embedding):
 	embedding_blob = np.array(embedding).tobytes()
 
 	# Insert the image and embedding into the table
-	c.execute('''
+	connection.execute('''
         INSERT INTO images (image, embedding)
         VALUES (?, ?)
     ''', (image_blob, embedding_blob))
@@ -43,7 +44,20 @@ def insert_image_embedding(image_path, embedding):
 	conn.close()
 
 
-images_dir = os.path.join(base_dir, DATASET)
-for img in os.listdir(images_dir):
-	img_path = os.path.join(images_dir, img)
-	insert_image_embedding(img_path, [12, 12, 312, 1, 1312, 132, 123, 321, 123])
+def parse():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('dataset', type=str, help='Name of the dataset')
+	args = parser.parse_args()
+	return args
+
+
+if __name__ == '__main__':
+	args = parse()
+	db_name = f"{args.dataset}.db"
+
+	create_DB(db_name)
+
+	images_dir = os.path.join(BASE_DIR, args.dataset)
+	for img in os.listdir(images_dir):
+		img_path = os.path.join(images_dir, img)
+		insert_image_embedding(img_path, [1, 0], db_name)
