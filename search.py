@@ -1,4 +1,3 @@
-# search in db
 import sys
 import os
 import sqlite3
@@ -16,40 +15,40 @@ DATABASE_NAME = f"{DATASET}.db"
 
 
 def retrieve_image_embedding(image_id):
-	conn = sqlite3.connect(DATABASE_NAME)
+	conn = sqlite3.connect(f"databases/{DATABASE_NAME}")
 	cur = conn.cursor()
 
 	# Retrieve the image and embedding
 	cur.execute('''
-        SELECT image, embedding FROM images WHERE id=?
+        SELECT image_name, image FROM images WHERE id=?
     ''', (image_id,))
 
 	row = cur.fetchone()
 
 	# Convert binary data back to original formats
-	image_blob = row[0]
-	embedding_blob = row[1]
+	image_name = row[0]
+	image_blob = row[1]
 	image = np.frombuffer(image_blob, dtype=np.uint8)
-	embedding = np.frombuffer(embedding_blob, dtype=np.float32)
 
 	conn.close()
 
 	# Decode image
 	image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-	return image, embedding
+	return image_name, image
 
 
-def tinker_display(images, resize_width=600):
+def tinker_display(images):
 	# Create a Tkinter window
 	root = tk.Tk()
 	root.title("Retrieved Images")
 
 	# Resize images and determine the largest image size
+	resize_width = 600
 	resized_images = []
 	max_width = 0
 	max_height = 0
 
-	for img in images:
+	for image_name, img in images:
 		img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 		img_pil = Image.fromarray(img_rgb)
 
@@ -70,6 +69,8 @@ def tinker_display(images, resize_width=600):
 	# Set initial window size based on the largest image
 	initial_width = max_width * 3 + 40  # 3 columns + padding
 	initial_height = max_height + 20  # Add some padding
+	if initial_width / initial_height >= 1.5:
+		initial_height = initial_height * 2
 	root.geometry(f"{initial_width}x{initial_height}")
 
 	# Create a canvas with a scrollbar
@@ -120,8 +121,8 @@ if __name__ == "__main__":
 
 	images = []
 	for i in inds:
-		print("Retrieving image", i + 1)
-		image, embedding = retrieve_image_embedding(int(i + 1))
+		image = retrieve_image_embedding(int(i + 1))
+		print("Retrieving image:", image[0])
 		images.append(image)
 
 	tinker_display(images)
