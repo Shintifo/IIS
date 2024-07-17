@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
-SIMILARITY_THRESHOLD = 0.25
+SIMILARITY_THRESHOLD = 0.7
 TOP_K = 100
 
 
@@ -79,11 +79,12 @@ def find_similar(dataset_name, query_vector):
 	indices = indices[np.where(distances <= SIMILARITY_THRESHOLD)]
 
 	print(f"Indices of nearest neighbors: {indices}")
-	print(distances[indices])
+	print(distances[:len(indices)])
+	print(distances)
 	return indices
 
 
-def new_main(dataset_name, qimg):
+def main(dataset_name, qimg):
 	qimg_path = os.path.join("datasets", dataset_name, qimg)
 	q_vector = qimg_embedding(qimg_path)
 	res = find_similar(dataset_name, q_vector)
@@ -91,4 +92,4 @@ def new_main(dataset_name, qimg):
 
 
 if __name__ == "__main__":
-	new_main('custom', "A1.jpg")
+	main('roxford5k', "all_souls_000072.jpg")
