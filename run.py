@@ -8,12 +8,12 @@ import torch
 import torch.nn.functional as F
 
 import torchvision.transforms as transforms
-import faiss
+import	 faiss
 from tqdm import tqdm
 import time
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
-SIMILARITY_THRESHOLD = 0.25
+SIMILARITY_THRESHOLD = 0.5
 TOP_K = 100
 
 def transform_image(image_path):
@@ -74,7 +74,7 @@ def fais(X, query_embedding):
 
 	print(f"Indices of nearest neighbors: {indices}")
 
-	print(distances[indices])
+	print(distances[:len(indices)])
 	return indices
 
 
