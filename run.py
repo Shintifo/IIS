@@ -12,47 +12,40 @@ import faiss
 from tqdm import tqdm
 
 
-def extract_features(images_dir):
-	imgs = [Image.open(os.path.join(images_dir, img)) for img in os.listdir(images_dir)]
+def transform_image(image_path):
+	image = Image.open(image_path)
 
-	t = transforms.Compose([
+	transformer = transforms.Compose([
 		transforms.Resize((500, 500)),
 		transforms.ToTensor(),
 		transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 	])
 
-	imgs = [t(img).unsqueeze(0).numpy() for img in imgs]
-	session = onnxruntime.InferenceSession(f"WrapperONNX.onnx")
+	image = transformer(image).unsqueeze(0).numpy()
+	return image
 
+
+def extract_features(images_dir):
+	i_paths = [os.path.join(images_dir, img) for img in os.listdir(images_dir)]
+
+	imgs = [transform_image(img_path) for img_path in i_paths]
+
+	session = onnxruntime.InferenceSession(f"WrapperONNX.onnx")
 	out = []
 	for img in tqdm(imgs):
 		out.append(session.run(None, {"l_tensor_": img})[0])
-	# out = [session.run(None, {"l_tensor_": img})[0] for img in imgs]
+
 	img_feats = torch.tensor(np.vstack(out))
 	X = F.normalize(img_feats, p=2, dim=1)
 	return X
 
 
-def qimg_embedding(qimg, X, images_dir):
-	imgs = np.array([file for file in os.listdir(images_dir)])
-	qimg_id = np.where(imgs == qimg)[0]
-	Q = X[qimg_id]
-	return Q
-
-
-def count_qimg(path_qimg):
-	image = Image.open(path_qimg)
-
-	t = transforms.Compose([
-		transforms.Resize((500, 500)),
-		transforms.ToTensor(),
-		transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-	])
-
-	q = t(image).unsqueeze(0).numpy()
+def qimg_embedding(qimg_path):
+	Q = transform_image(qimg_path)
 
 	session = onnxruntime.InferenceSession(f"WrapperONNX.onnx")
-	q = session.run(None, {"l_tensor_": q})[0]
+	q = session.run(None, {"l_tensor_": Q})[0]
+
 	q = torch.tensor(np.vstack(q))
 	q = F.normalize(q, p=2, dim=1)
 	return q
@@ -72,26 +65,26 @@ def fais(X, query_embedding):
 
 	distances, indices = index.search(query_embedding, k)
 
-	indices = indices[0]
+	indices = indices[0]  # TODO change to numpy
 	distances = distances[0]
 	indices = indices[np.where(distances <= 0.25)]
 	print(f"Indices of nearest neighbors: {indices}")
-	for i in indices:
+
+	for i in indices:  # TODO change to numpy
 		print(distances[i])
 
 
 def main(dataset_name, qimg):
 	images_dir = f"{os.getcwd()}/datasets/{dataset_name}"
+	qimg_path = os.path.join(images_dir, qimg)
+
 	s = time.time()
 	X = extract_features(images_dir)
 	print(time.time() - s)
-	Q = qimg_embedding(qimg, X, images_dir)
+
+	Q = qimg_embedding(qimg_path)
 	fais(X, Q)
 
 
 if __name__ == "__main__":
-	# parser = argparse.ArgumentParser(description='Find Similar Images')
-	# parser.add_argument('qimg', type=str, help='Query Image')
-	# args = parser.parse_args()
-	# fais(None, count_qimg("datasets/roxford5k/all_souls_000002.jpg"))
-	main('roxford5k', "all_souls_000002.jpg")
+	main('custom', "A1.jpg")
