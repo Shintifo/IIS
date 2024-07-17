@@ -1,8 +1,8 @@
+#use this to retrieve single file from db
 import sqlite3
 import numpy as np
-import cv2  # OpenCV for image handling
+import cv2
 import sys
-
 
 def retrieve_image_embedding(image_id):
     conn = sqlite3.connect('images_embeddings.db')
