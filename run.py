@@ -11,6 +11,7 @@ import torchvision.transforms as transforms
 import faiss
 from tqdm import tqdm
 
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 def transform_image(image_path):
 	image = Image.open(image_path)
@@ -70,8 +71,9 @@ def fais(X, query_embedding):
 	indices = indices[np.where(distances <= 0.25)]
 	print(f"Indices of nearest neighbors: {indices}")
 
-	for i in indices:  # TODO change to numpy
+	for i in range(indices.size):  # TODO change to numpy
 		print(distances[i])
+	return indices
 
 
 def main(dataset_name, qimg):
@@ -83,7 +85,8 @@ def main(dataset_name, qimg):
 	print(time.time() - s)
 
 	Q = qimg_embedding(qimg_path)
-	fais(X, Q)
+	res = fais(X, Q)
+	return res
 
 
 if __name__ == "__main__":
