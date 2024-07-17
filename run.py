@@ -10,14 +10,14 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 import faiss
 from tqdm import tqdm
-
+import time
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 SIMILARITY_THRESHOLD = 0.25
 TOP_K = 100
 
 def transform_image(image_path):
-	image = Image.open(image_path)
+	image = Image.open(image_path).convert('RGB')
 
 	transformer = transforms.Compose([
 		transforms.Resize((500, 500)),
