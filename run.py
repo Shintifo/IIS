@@ -1,17 +1,20 @@
 import argparse
 import os
-import time
 
 import numpy as np
 import onnxruntime
 from PIL import Image
 import torch
 import torch.nn.functional as F
+
 import torchvision.transforms as transforms
 import faiss
 from tqdm import tqdm
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+SIMILARITY_THRESHOLD = 0.25
+TOP_K = 100
 
 def transform_image(image_path):
 	image = Image.open(image_path)
@@ -42,18 +45,19 @@ def extract_features(images_dir):
 
 
 def qimg_embedding(qimg_path):
-	Q = transform_image(qimg_path)
+	q = transform_image(qimg_path)
 
 	session = onnxruntime.InferenceSession(f"WrapperONNX.onnx")
-	q = session.run(None, {"l_tensor_": Q})[0]
-
+	q = np.asarray(
+		session.run(None, {"l_tensor_": q})
+	).flatten()
 	q = torch.tensor(np.vstack(q))
 	q = F.normalize(q, p=2, dim=1)
 	return q
 
 
 def save_index(X):
-	index = faiss.IndexFlatL2(2048)
+	index = faiss.IndexFlatL2(X.shape[1])
 	index.add(X)
 	faiss.write_index(index, 'index_file.index')
 
@@ -62,13 +66,13 @@ def fais(X, query_embedding):
 	save_index(X)
 	index = faiss.read_index("index_file.index")
 
-	k = min(100, X.shape[0])
-
+	k = min(TOP_K, X.shape[0])
 	distances, indices = index.search(query_embedding, k)
 
-	indices = indices[0]  # TODO change to numpy
-	distances = distances[0]
-	indices = indices[np.where(distances <= 0.25)]
+	indices = np.asarray(indices).flatten()
+	distances = np.asarray(distances).flatten()
+	indices = indices[np.where(distances <= SIMILARITY_THRESHOLD)]
+
 	print(f"Indices of nearest neighbors: {indices}")
 
 	for i in range(indices.size):  # TODO change to numpy
