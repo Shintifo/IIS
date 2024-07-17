@@ -41,8 +41,9 @@ def insert_image_embedding(image_path, embedding):
     conn.commit()
     conn.close()
 
-
-images_dir = r'D:\models\tmf\IIS\datasets\custom'
+DATASET = "custom"
+base_dir = r'.\datasets'
+images_dir = os.path.join(base_dir, DATASET)
 for img in os.listdir(images_dir):
     img_path = os.path.join(images_dir, img)
     insert_image_embedding(img_path, [12,12,312,1,1312,132,123,321,123])
