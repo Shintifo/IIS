@@ -1,3 +1,4 @@
+import argparse
 import sys
 import os
 import sqlite3
@@ -10,12 +11,9 @@ from PIL import Image, ImageTk
 
 from run import main
 
-DATASET = "custom"
-DATABASE_NAME = f"{DATASET}.db"
 
-
-def retrieve_image_embedding(image_id):
-	conn = sqlite3.connect(f"databases/{DATABASE_NAME}")
+def retrieve_image_embedding(image_id, db_name):
+	conn = sqlite3.connect(f"databases/{db_name}")
 	cur = conn.cursor()
 
 	# Retrieve the image and embedding
@@ -76,7 +74,6 @@ def tinker_display(images):
 	# Create a canvas with a scrollbar
 	frame = tk.Frame(root)
 	frame.pack(fill=tk.BOTH, expand=1)
-
 	canvas = tk.Canvas(frame)
 	scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=canvas.yview)
 	scrollable_frame = ttk.Frame(canvas)
@@ -95,7 +92,6 @@ def tinker_display(images):
 	canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
 	num_columns = 3
-
 	for i, img_resized in enumerate(resized_images):
 		img_tk = ImageTk.PhotoImage(img_resized)
 		label = tk.Label(scrollable_frame, image=img_tk)
@@ -107,21 +103,26 @@ def tinker_display(images):
 	root.mainloop()
 
 
+def parse():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('dataset', type=str, help='Name of the dataset')
+	parser.add_argument('qimg', type=str, help='Query image')
+	args = parser.parse_args()
+	return args
+
+
 if __name__ == "__main__":
-	if len(sys.argv) != 2:
-		print("Not correct input!")
-		print("Usage: python script.py <image_id>")
-		sys.exit(1)
+	args = parse()
+	db_name = f"{args.dataset}.db"
 
 	base_dir = r'.\datasets'
-	images_dir = os.path.join(base_dir, DATASET)
-	query_image = str(sys.argv[1])
+	images_dir = os.path.join(base_dir, args.dataset)
 
-	inds = main(DATASET, query_image)
+	inds = main(args.dataset, args.qimg)
 
 	images = []
 	for i in inds:
-		image = retrieve_image_embedding(int(i + 1))
+		image = retrieve_image_embedding(int(i + 1), db_name)
 		print("Retrieving image:", image[0])
 		images.append(image)
 

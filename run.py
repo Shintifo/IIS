@@ -94,4 +94,4 @@ def main(dataset_name, qimg, recalc=False):
 
 
 if __name__ == "__main__":
-	main('custom', "all_souls_000072.jpg", True)
+	main('oxford5k', "all_souls_000072.jpg", True)
