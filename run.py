@@ -10,11 +10,12 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 import faiss
 from tqdm import tqdm
-import time
+
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 SIMILARITY_THRESHOLD = 0.25
 TOP_K = 100
+
 
 def transform_image(image_path):
 	image = Image.open(image_path).convert('RGB')
@@ -55,39 +56,39 @@ def qimg_embedding(qimg_path):
 	return q
 
 
-def save_index(X):
+def save_index(X, dataset_name):
 	index = faiss.IndexFlatL2(X.shape[1])
 	index.add(X)
-	faiss.write_index(index, 'index_file.index')
+	faiss.write_index(index, f'databases/{dataset_name}.index')
 
 
-def fais(X, query_embedding):
-	save_index(X)
-	index = faiss.read_index("index_file.index")
+def find_similar(dataset_name, query_vector):
+	if not os.path.exists(os.path.join('databases', f"{dataset_name}.index")):
+		images_dir = f"{os.getcwd()}/datasets/{dataset_name}"
+		X = extract_features(images_dir)
+		save_index(X, dataset_name)
 
-	k = min(TOP_K, X.shape[0])
-	distances, indices = index.search(query_embedding, k)
+	index = faiss.read_index(f"databases/{dataset_name}.index")
 
+	k = min(TOP_K, index.ntotal)
+
+	distances, indices = index.search(query_vector, k)
 	indices = np.asarray(indices).flatten()
 	distances = np.asarray(distances).flatten()
+
 	indices = indices[np.where(distances <= SIMILARITY_THRESHOLD)]
 
 	print(f"Indices of nearest neighbors: {indices}")
-
-	print(distances[:len(indices)])
+	print(distances[indices])
 	return indices
 
 
-def main(dataset_name, qimg):
-	images_dir = f"{os.getcwd()}/datasets/{dataset_name}"
-	qimg_path = os.path.join(images_dir, qimg)
-
-	X = extract_features(images_dir)
-
-	Q = qimg_embedding(qimg_path)
-	res = fais(X, Q)
+def new_main(dataset_name, qimg):
+	qimg_path = os.path.join("datasets", dataset_name, qimg)
+	q_vector = qimg_embedding(qimg_path)
+	res = find_similar(dataset_name, q_vector)
 	return res
 
 
 if __name__ == "__main__":
-	main('custom', "A1.jpg")
+	new_main('custom', "A1.jpg")
