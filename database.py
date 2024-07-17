@@ -12,7 +12,7 @@ def create_DB(db_name):
 	c.execute('''
 	    CREATE TABLE IF NOT EXISTS images (
 	        id INTEGER PRIMARY KEY AUTOINCREMENT,
-	        file_name TEXT,
+	        image_name TEXT,
 	        image BLOB
 	    )
 	''')
@@ -22,7 +22,7 @@ def create_DB(db_name):
 
 
 def insert_image(image_path, db_name):
-	conn = sqlite3.connect(db_name)
+	conn = sqlite3.connect(f"databases/{db_name}")
 	connection = conn.cursor()
 
 	with open(image_path, 'rb') as f:
@@ -31,7 +31,7 @@ def insert_image(image_path, db_name):
 	image_name = image_path.split("/")[-1]
 
 	connection.execute('''
-        INSERT INTO images (file_name, image_name)
+        INSERT INTO images (image_name, image)
         VALUES (?, ?)
     ''', (image_name, image_blob))
 
