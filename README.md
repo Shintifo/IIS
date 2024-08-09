@@ -13,7 +13,7 @@ The Identical Image Search System (ISS) is a powerful tool designed to search fo
 
 To get started with ISS, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/yourusername/ISS.git`
+1. Clone the repository: `git clone https://github.com/Shintifo/ISS.git`
 2. Navigate into the project directory: `cd ISS`
 3. Install the required packages: `pip install -r requirements.txt`
 
