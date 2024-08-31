@@ -9,8 +9,10 @@ def create_DB(db_name):
 	conn = sqlite3.connect(f"databases/{db_name}")
 	c = conn.cursor()
 
+	c.execute(f"DROP TABLE IF EXISTS images")
+
 	c.execute('''
-	    CREATE TABLE IF NOT EXISTS images (
+	    CREATE TABLE images (
 	        id INTEGER PRIMARY KEY AUTOINCREMENT,
 	        image_name TEXT,
 	        image BLOB
@@ -44,6 +46,18 @@ def parse():
 	parser.add_argument('dataset', type=str, help='Name of the dataset')
 	args = parser.parse_args()
 	return args
+
+
+def main(name):
+	db_name = f"{name}.db"
+	create_DB(db_name)
+
+	images_dir = os.path.join(BASE_DIR, name)
+	for img in os.listdir(images_dir):
+		img_path = os.path.join(images_dir, img)
+		if not os.path.isfile(img_path):
+			continue
+		insert_image(img_path, db_name)
 
 
 if __name__ == '__main__':

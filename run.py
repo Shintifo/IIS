@@ -10,8 +10,8 @@ import faiss
 from tqdm import tqdm
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-
-SIMILARITY_THRESHOLD = 0.6
+# 0.4
+SIMILARITY_THRESHOLD = 0.3
 TOP_K = 100
 IN_SIZE = 500
 MODEL = "WrapperONNX.onnx"
@@ -33,13 +33,11 @@ def transform_image(image_path):
 def extract_features(images_dir):
 	i_paths = [os.path.join(images_dir, img) for img in os.listdir(images_dir)]
 
-	imgs = [transform_image(img_path) for img_path in i_paths]
-
 	session = onnxruntime.InferenceSession(MODEL)
 	input_name = session.get_inputs()[0].name
 	out = []
-	for img in tqdm(imgs):
-		out.append(session.run(None, {input_name: img})[0])
+	for img_path in tqdm(i_paths):
+		out.append(session.run(None, {input_name: transform_image(img_path)})[0])
 
 	img_feats = torch.tensor(np.vstack(out))
 	X = F.normalize(img_feats, p=2, dim=1)
@@ -80,9 +78,9 @@ def find_similar(dataset_name, query_vector, recalc):
 
 	indices = indices[np.where(distances <= SIMILARITY_THRESHOLD)]
 
-	print(f"Indices of nearest neighbors: {indices}")
-	print(distances[:len(indices)])
-	print(distances)
+	# print(f"Indices of nearest neighbors: {indices}")
+	# print(distances[:len(indices)])
+	# print(distances)
 	return indices
 
 

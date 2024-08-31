@@ -19,8 +19,9 @@ To get started with ISS, follow these steps:
 
 ## Usage <a name="usage"></a>
 
-To use ISS, you need to have your images ready in a datasets/{dataset_name} directory.
-Firstly, you need to initialize the database with images. `python database dataset_name`
+To use ISS, you need to have your images ready in a datasets/{dataset_name} directory. 
+Also, you need to create folder databases.
+Firstly, you need to initialize the database with images. `python database.py dataset_name`
 
 Then, you can use the main script to search for identical images. `python search.py dataset_name query_image`
 
