@@ -7,7 +7,8 @@ The Identical Image Search System (ISS) is a powerful tool designed to search fo
 2. [Usage](#usage)
 3. [Model](#model)
 4. [Database](#database)
-5. [License](#license)
+5. [Examples](#examples)
+6. [License](#license)
 
 ## Installation <a name="installation"></a>
 
@@ -36,6 +37,16 @@ This model was converted to ONNX format and executed in `run.py`.
 
 - **SQL**: ISS uses SQL to store and manage metadata about the images. This includes image by itself and image name.
 - **FAISS**: ISS uses index based database to store vector embeddings.
+
+## Examples <a name="examples"></a>
+
+**Query:**
+![Query Image](https://github.com/user-attachments/assets/6f162dca-266a-4289-80bf-04f94c98bf39)
+
+**Search Result:**
+![Search Result Image](https://github.com/user-attachments/assets/d3724031-7d87-42fa-b775-5c4c5698988c)
+
+
 
 ## License <a name="license"></a>
 ISS is released under the MIT License. See the LICENSE file for more details.
